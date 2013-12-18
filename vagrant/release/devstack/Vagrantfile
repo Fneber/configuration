@@ -1,6 +1,18 @@
 MEMORY = 2048
 CPU_COUNT = 2
 
+# TODO: set devstack option
+$script = <<SCRIPT
+/edx/bin/update configuration release
+/edx/bin/update edx-platform master
+/edx/bin/update xqueue master
+/edx/bin/update forums master
+/edx/bin/update xserver master
+/edx/bin/update ease master
+/edx/bin/update discern master
+/edx/bin/update edx-ora master
+SCRIPT
+
 edx_platform_mount_dir = "edx-platform"
 forum_mount_dir = "cs_comments_service"
 ora_mount_dir = "ora"
@@ -13,10 +25,10 @@ if ENV['VAGRANT_MOUNT_BASE']
 
 end
 
-
 Vagrant.configure("2") do |config|
 
-# Creates a devstack from a base Ubuntu 12.04 image
+  # Creates a devstack from a base Ubuntu 12.04 image
+  # TODO -- replace this with the base box that has edx_ansible and devstack installed
   config.vm.box     = "precise64"
   config.vm.box_url = "http://files.vagrantup.com/precise64.box"
 
@@ -40,9 +52,8 @@ Vagrant.configure("2") do |config|
     vb.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
   end
 
-  config.vm.provision :ansible do |ansible|
-    ansible.playbook = "../../playbooks/vagrant-devstack.yml"
-    ansible.inventory_path = "../../playbooks/vagrant/inventory.ini"
-    ansible.verbose = "extra"
-  end
+  # Assume that the base box has the edx_ansible role installed
+  # We can then tell the Vagrant instance to update itself.
+  config.vm.provision "shell", inline: $script
+
 end

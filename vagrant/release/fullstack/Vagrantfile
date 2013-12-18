@@ -1,0 +1,38 @@
+MEMORY = 2048
+CPU_COUNT = 2
+
+$script = <<SCRIPT
+/edx/bin/update configuration release
+/edx/bin/update edx-platform master
+/edx/bin/update xqueue master
+/edx/bin/update forums master
+/edx/bin/update xserver master
+/edx/bin/update ease master
+/edx/bin/update discern master
+/edx/bin/update edx-ora master
+SCRIPT
+
+Vagrant.configure("2") do |config|
+
+  # Creates a devstack from a base Ubuntu 12.04 image
+  # TODO -- replace this with the base box that has edx_ansible and fullstack installed
+  config.vm.box     = "precise64"
+  config.vm.box_url = "http://files.vagrantup.com/precise64.box"
+
+  config.vm.network :private_network, ip: "192.168.33.10"
+  config.hostsupdater.aliases = ["preview.localhost"]
+
+  config.vm.provider :virtualbox do |vb|
+    vb.customize ["modifyvm", :id, "--memory", MEMORY.to_s]
+    vb.customize ["modifyvm", :id, "--cpus", CPU_COUNT.to_s]
+
+    # Allow DNS to work for Ubuntu 12.10 host
+    # http://askubuntu.com/questions/238040/how-do-i-fix-name-service-for-vagrant-client
+    vb.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
+  end
+
+  # Assume that the base box has the edx_ansible role installed
+  # We can then tell the Vagrant instance to update itself.
+  config.vm.provision "shell", inline: $script
+
+end
